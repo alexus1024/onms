@@ -1,3 +1,6 @@
+# Project output
+/onms
+
 # Binaries for programs and plugins
 *.exe
 *.exe~
@@ -13,3 +16,6 @@
 
 # Dependency directories (remove the comment below to include it)
 # vendor/
+
+# IDE environment
+/.vscode
