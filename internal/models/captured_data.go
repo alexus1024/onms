@@ -6,10 +6,10 @@ import "github.com/google/uuid"
 type CapturedData struct {
 	MachineID MachineID `json:"machineId"`
 	Stats     struct {
-		CPUTemp      RawTemperature `json:"cpuTemp"`
-		FanSpeed     float64        `json:"fanSpeed"`
-		HDDSpace     float64        `json:"HDDSpace"`
-		InternalTemp RawTemperature `json:"internalTemp"`
+		CPUTemp      RawTemperature `json:"cpuTemp,omitempty"`
+		FanSpeed     float64        `json:"fanSpeed,omitempty"`
+		HDDSpace     float64        `json:"HDDSpace,omitempty"`
+		InternalTemp RawTemperature `json:"internalTemp,omitempty"`
 	} `json:"stats"`
 	LastLoggedIn string  `json:"lastLoggedIn"`
 	SysTime      RawTime `json:"sysTime"`

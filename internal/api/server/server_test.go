@@ -21,9 +21,10 @@ import (
 const json1 = `{
     "machineId": 12345,
     "stats": {
-        "cpuTemp": 90,
+        "cpuTemp": "90c",
         "fanSpeed": 400,
-        "HDDSpace": 800
+        "HDDSpace": 800,
+		"internalTemp": 123.456
     },
     "lastLoggedIn": "admin/Paul",
     "sysTime": "2022-04-23T18:25:43.511Z"
@@ -33,7 +34,7 @@ const contentTypeJson = "application/json"
 func startTestServer(t *testing.T) (*httptest.Server, http.Client) {
 	log := logrus.New().WithField("test", t.Name())
 	memStorage := memory.NewMemoryRepo()
-	handler := server.GetMux(log)
+	handler := server.GetMux(&server.AppContext{Log: log, Repo: memStorage})
 
 	testServer := httptest.NewServer(handler)
 	testServer.Config.BaseContext = func(l net.Listener) context.Context {
@@ -69,6 +70,13 @@ func TestMainScenario(t *testing.T) {
 	assert.True(t, gjson.ValidBytes(responseBody))
 	assert.Equal(t, int64(2), gjson.GetBytes(responseBody, "#").Int())
 	assert.Equal(t, "[12345,12345]", gjson.GetBytes(responseBody, "#.machineId").Raw)
+	assert.Equal(t, "2022-04-23T18:25:43.511Z", gjson.GetBytes(responseBody, "1.sysTime").String())
+	assert.Equal(t, float64(90), gjson.GetBytes(responseBody, "0.stats.cpuTemp").Num)
+	assert.Equal(t, 123.456, gjson.GetBytes(responseBody, "1.stats.internalTemp").Num)
+
+	if t.Failed() {
+		assert.Fail(t, "full response", string(responseBody))
+	}
 }
 
 func TestContentTypeRequired(t *testing.T) {
@@ -77,6 +85,6 @@ func TestContentTypeRequired(t *testing.T) {
 
 	resp, err := client.Post(testServer.URL, "", strings.NewReader(json1))
 	require.NoError(t, err)
-	assert.Equal(t, http.StatusBadRequest, resp.StatusCode)
+	assert.Equal(t, http.StatusUnsupportedMediaType, resp.StatusCode)
 
 }

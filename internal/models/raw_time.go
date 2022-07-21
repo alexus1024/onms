@@ -7,7 +7,9 @@ import (
 )
 
 const CustomApiTimeFormat1 = "Mon 2006-01-02 15:04:05"
+const RFC3339Milli = "2006-01-02T15:04:05.999Z07:00"
 
+// allowedApiTimeFormats - here all known allowed time formats are listed.
 var allowedApiTimeFormats = []string{
 	time.RFC3339,
 	CustomApiTimeFormat1,
@@ -36,4 +38,9 @@ func (t *RawTime) UnmarshalJSON(value []byte) error {
 	}
 
 	return fmt.Errorf("parse RawTime: %s", errorAcc.String())
+}
+
+func (t RawTime) MarshalJSON() ([]byte, error) {
+	jsonStr := fmt.Sprintf(`"%s"`, time.Time(t).Format(RFC3339Milli))
+	return []byte(jsonStr), nil
 }

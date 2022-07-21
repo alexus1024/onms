@@ -1,10 +1,10 @@
 package server
 
 import (
-	"encoding/json"
 	"net/http"
 
 	"github.com/alexus1024/onms/internal/models"
+	"github.com/alexus1024/onms/internal/storage"
 	"github.com/gorilla/mux"
 	"github.com/sirupsen/logrus"
 )
@@ -14,57 +14,64 @@ const (
 	ContentTypeJson = "application/json"
 )
 
-type AppHandler func(http.ResponseWriter, *http.Request) error
+// AppHandler is a http.Handler enriched with application context.
+// In case of error it should return go error instead of using Writer.
+type AppHandler func(http.ResponseWriter, *http.Request, *AppContext) error
 
-type ApiError struct {
-	Message string
+// AppContext stores runtime dependencies for server's handlers
+// Not protected from changes, so just do not change it's content in handlers please.
+// But you can copy it instead.
+type AppContext struct {
+	Log  *logrus.Entry
+	Repo storage.Repo
 }
 
-func GetMux(log *logrus.Entry) http.Handler {
-
-	// TODO: content types
+// GetMux returns a handler configured to process all required operations.
+// Sub-handlers require server context to be configured properly.
+func GetMux(actx *AppContext) http.Handler {
 
 	r := mux.NewRouter()
-	r.HandleFunc("/", handleErrors(HandlerCapture, log)).Methods(http.MethodPost).Name("capture")
-	r.HandleFunc("/", handleErrors(HandlerGetAll, log)).Methods(http.MethodGet).Name("read all")
+	r.HandleFunc("/", toHandler(HandlerCapture, actx)).Methods(http.MethodPost).Name("capture")
+	r.HandleFunc("/", toHandler(HandlerGetAll, actx)).Methods(http.MethodGet).Name("read all")
 
 	return r
 }
 
-// handleErrors converts Golang errors into HTTP errors and thereby
+// toHandler converts AppHandler to http.HandlerFunc.
+// It also processes Golang errors into HTTP errors and thereby
 // setups application-wide standard for HTTP errors
-func handleErrors(ah AppHandler, log *logrus.Entry) http.HandlerFunc {
+func toHandler(ah AppHandler, actx *AppContext) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		err := ah(w, r)
+		route := mux.CurrentRoute(r)
+		log := actx.Log.WithField("handler", route.GetName())
+
+		// add current route into all handler's logs
+		ctxCopy := *actx
+		ctxCopy.Log = log
+
+		// call actual handler
+		err := ah(w, r, &ctxCopy)
+
+		// convert go errors into API errors
 		if err != nil {
 			route := mux.CurrentRoute(r)
-			log := log.WithField("route", route.GetName())
+			log := actx.Log.WithField("route", route.GetName())
 			switch te := err.(type) {
 			// TODO: reduce code duplication
 			case models.InputRelatedError:
 				log.WithError(err).Info("api error (input-related)")
 				errOut := ApiError{Message: te.Error()}
-				errOutBytes, err := json.Marshal(errOut)
-				if err != nil {
-					log.WithError(err).Error("can not marshal http error (input-related)")
-					w.WriteHeader(500)
-					return
+				status := te.SuggestedStatus()
+				if status == 0 {
+					status = 400
 				}
-				w.WriteHeader(400)
-				w.Write(errOutBytes)
+				errOut.WriteToResponse(log, w, status)
 				return
 
 			default:
 				log.WithError(err).Error("api error")
 				errOut := ApiError{Message: "internal error"}
-				errOutBytes, err := json.Marshal(errOut)
-				if err != nil {
-					log.WithError(err).Error("can not marshal http error")
-					w.WriteHeader(500)
-					return
-				}
-				w.WriteHeader(500)
-				w.Write(errOutBytes)
+				errOut.WriteToResponse(log, w, 500)
 				return
 			}
 		}
