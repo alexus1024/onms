@@ -57,7 +57,6 @@ func toHandler(ah AppHandler, actx *AppContext) http.HandlerFunc {
 			route := mux.CurrentRoute(r)
 			log := actx.Log.WithField("route", route.GetName())
 			switch te := err.(type) {
-			// TODO: reduce code duplication
 			case models.InputRelatedError:
 				log.WithError(err).Info("api error (input-related)")
 				errOut := ApiError{Message: te.Error()}
