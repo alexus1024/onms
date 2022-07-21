@@ -1,16 +1,13 @@
 package server_test
 
 import (
-	"context"
 	"io"
-	"net"
 	"net/http"
 	"net/http/httptest"
 	"strings"
 	"testing"
 
 	"github.com/alexus1024/onms/internal/api/server"
-	"github.com/alexus1024/onms/internal/storage"
 	"github.com/alexus1024/onms/internal/storage/memory"
 	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
@@ -37,9 +34,6 @@ func startTestServer(t *testing.T) (*httptest.Server, http.Client) {
 	handler := server.GetMux(&server.AppContext{Log: log, Repo: memStorage})
 
 	testServer := httptest.NewServer(handler)
-	testServer.Config.BaseContext = func(l net.Listener) context.Context {
-		return storage.WithStorage(context.Background(), memStorage)
-	}
 
 	return testServer, *testServer.Client()
 }
