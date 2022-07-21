@@ -2,7 +2,7 @@
 
 ## About
 
-This solution demonstrates Golang HTTP server capable of accept and store specific JSON structures. It also can return stored values.
+This solution demonstrates Golang HTTP server capable of accept specific JSON structures and store them. It also can return stored values.
 Solution uses simple in-memory storage.
 
 Challenges:
@@ -22,7 +22,7 @@ Assumptions made:
     * for time this is "2006-01-02T15:04:05.999Z07:00"
     * for temperature - float with Celsius value
 * if timezone is unknown, assume GMT0
-* invalid json in the task (no comma after "HDDSpace"): assume json is valid
+* invalid json in the demo data (no comma after "HDDSpace"): assume json is valid
 * assume that InternalTemp is allowed to have 'c' too (no such case in demo data)
 
 ## Instructions
