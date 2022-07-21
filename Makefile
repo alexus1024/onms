@@ -1,8 +1,11 @@
 build:
-	@go build -o onms cmd/shell/main.go
+	@go build -o sample_server cmd/shell/main.go
 
 run: build
-	./onms
+	@SAMPLE_SERVER_LOG_LEVEL=TRACE ./sample_server
+
+help_env : build
+	@./sample_server --help
 
 test:
 	@go test ./...

@@ -2,19 +2,35 @@ package main
 
 import (
 	"net/http"
+	"os"
 
 	"github.com/alexus1024/onms/internal/api/server"
+	"github.com/alexus1024/onms/internal/config"
 	"github.com/alexus1024/onms/internal/storage/memory"
 	"github.com/sirupsen/logrus"
 )
 
-const serverAddr = ":4000"
-
 func main() {
+
+	if len(os.Args) >= 2 && os.Args[1] == "--help" {
+		config.PrintHelp()
+		return
+	}
+
+	appConfig, err := config.ReadConfig()
+	if err != nil {
+		config.PrintHelp()
+		panic("can not read environment variables: " + err.Error())
+	}
+
 	logger := logrus.New()
-	logger.SetLevel(logrus.TraceLevel)
-	logger.SetFormatter(&logrus.JSONFormatter{}) // better for Kibana
-	logger.WithField("addr", serverAddr).Info("App started")
+	logger.SetLevel(appConfig.LogLevel)
+
+	if appConfig.JsonLog {
+		logger.SetFormatter(&logrus.JSONFormatter{}) // better for Kibana
+	}
+
+	logger.WithField("addr", appConfig.ServerAddr).WithField("min_log_level", logger.Level).Info("App started")
 
 	repo := memory.NewMemoryRepo()
 	appContext := &server.AppContext{
@@ -24,11 +40,11 @@ func main() {
 	mainHandler := server.GetMux(appContext)
 
 	server := http.Server{
-		Addr:    serverAddr,
+		Addr:    appConfig.ServerAddr,
 		Handler: mainHandler,
 	}
 
-	err := server.ListenAndServe()
+	err = server.ListenAndServe()
 	if err != nil {
 		logger.WithError(err).Error("http server exited with error")
 	}
