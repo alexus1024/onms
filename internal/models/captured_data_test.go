@@ -8,6 +8,7 @@ import (
 	"github.com/alexus1024/onms/internal/models"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"github.com/tidwall/gjson"
 )
 
 const (
@@ -85,4 +86,31 @@ func TestUnmarshal(t *testing.T) {
 			assert.Equal(t, tC.expSysTime, time.Time(model.SysTime))
 		})
 	}
+}
+
+func TestMarshal(t *testing.T) {
+	demoTZ, err := time.LoadLocation("Asia/Yekaterinburg") // GMT+5
+
+	require.NoError(t, err)
+
+	model := &models.CapturedData{
+		MachineID: 1,
+		Stats: models.CapturedDataStats{
+			CPUTemp:  2,
+			FanSpeed: 3,
+		},
+		LastLoggedIn: "4",
+		SysTime:      models.RawTime(time.Date(2022, 1, 2, 3, 4, 5, 6, demoTZ)),
+	}
+
+	jsonResult, err := json.Marshal(model)
+	require.NoError(t, err)
+
+	gjson.ValidBytes(jsonResult)
+	assert.Equal(t, float64(1), gjson.GetBytes(jsonResult, "machineId").Num)
+	assert.Equal(t, float64(2), gjson.GetBytes(jsonResult, "stats.cpuTemp").Num)
+	assert.Equal(t, float64(3), gjson.GetBytes(jsonResult, "stats.fanSpeed").Num)
+	assert.Equal(t, "4", gjson.GetBytes(jsonResult, "lastLoggedIn").Str)
+	assert.Equal(t, "2022-01-02T03:04:05+05:00", gjson.GetBytes(jsonResult, "sysTime").Str) // 6 nanoseconds was cut
+
 }

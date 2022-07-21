@@ -27,5 +27,12 @@ Assumptions made:
 
 # Instructions
 
+Go 1.18 is required to be installed locally and added to the PATH.
+
 Use makefile's shortcuts to build, test and run the project.
+* "make build" : builds the project and places the binary result "sample_server" to the project root
+* "make test"  : runs all unit tests
+* "make run"   : builds and executes the binary with debug configuration
+
+Application can be configured with certain environment variables. To get the list of them - run "make help_env" or simply "./sample_server --help". E.g. to run app with custom port run "SAMPLE_SERVER_SERVER_ADDR=:3999 ./sample_server"
 
