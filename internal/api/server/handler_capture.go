@@ -26,5 +26,7 @@ func HandlerCapture(w http.ResponseWriter, r *http.Request) error {
 		return fmt.Errorf("save to storage: %w", err)
 	}
 
+	w.WriteHeader(http.StatusCreated)
+
 	return nil
 }

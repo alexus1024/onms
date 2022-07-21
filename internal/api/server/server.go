@@ -17,6 +17,8 @@ type ApiError struct {
 
 func GetMux(log *logrus.Entry) http.Handler {
 
+	// TODO: content types
+
 	r := mux.NewRouter()
 	r.HandleFunc("/", handleErrors(HandlerCapture, log)).Methods(http.MethodPost).Name("capture")
 	r.HandleFunc("/", handleErrors(HandlerGetAll, log)).Methods(http.MethodGet).Name("read all")
@@ -24,7 +26,7 @@ func GetMux(log *logrus.Entry) http.Handler {
 	return r
 }
 
-// handleErrors converts Golang erros into HTTP errors and thereby
+// handleErrors converts Golang errors into HTTP errors and thereby
 // setups application-wide standard for HTTP errors
 func handleErrors(ah AppHandler, log *logrus.Entry) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -33,7 +35,7 @@ func handleErrors(ah AppHandler, log *logrus.Entry) http.HandlerFunc {
 			route := mux.CurrentRoute(r)
 			log := log.WithField("route", route.GetName())
 			switch te := err.(type) {
-			// TODO: reduce code dublication
+			// TODO: reduce code duplication
 			case models.InputRelatedError:
 				log.WithError(err).Info("api error (input-related)")
 				errOut := ApiError{Message: te.Error()}
