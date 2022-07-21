@@ -3,6 +3,7 @@ package main
 import (
 	"net/http"
 	"os"
+	"time"
 
 	"github.com/alexus1024/onms/internal/api/server"
 	"github.com/alexus1024/onms/internal/config"
@@ -11,19 +12,27 @@ import (
 )
 
 func main() {
+	logger := logrus.New()
 
 	if len(os.Args) >= 2 && os.Args[1] == "--help" {
-		config.PrintHelp()
+		err := config.PrintHelp()
+		if err != nil {
+			logger.WithError(err).Error("PrintHelp error")
+		}
+
 		return
 	}
 
 	appConfig, err := config.ReadConfig()
 	if err != nil {
-		config.PrintHelp()
+		err := config.PrintHelp()
+		if err != nil {
+			logger.WithError(err).Error("PrintHelp error")
+		}
+
 		panic("can not read environment variables: " + err.Error())
 	}
 
-	logger := logrus.New()
 	logger.SetLevel(appConfig.LogLevel)
 
 	if appConfig.JsonLog {
@@ -40,8 +49,10 @@ func main() {
 	mainHandler := server.GetMux(appContext)
 
 	server := http.Server{
-		Addr:    appConfig.ServerAddr,
-		Handler: mainHandler,
+		Addr:              appConfig.ServerAddr,
+		Handler:           mainHandler,
+		ReadTimeout:       time.Minute,
+		ReadHeaderTimeout: time.Minute,
 	}
 
 	err = server.ListenAndServe()

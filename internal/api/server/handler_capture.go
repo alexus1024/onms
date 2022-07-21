@@ -9,7 +9,6 @@ import (
 )
 
 func HandlerCapture(w http.ResponseWriter, r *http.Request, actx *AppContext) error {
-
 	contentType := r.Header.Get(ContentType)
 	if contentType != ContentTypeJson {
 		return models.NewInputRelatedErrorWithStatus(
@@ -22,6 +21,7 @@ func HandlerCapture(w http.ResponseWriter, r *http.Request, actx *AppContext) er
 	jd := json.NewDecoder(r.Body)
 
 	model := &models.CapturedData{}
+
 	err := jd.Decode(model)
 	if err != nil {
 		return models.NewInputRelatedError("can not decode input", err)

@@ -29,6 +29,8 @@ const json1 = `{
 const contentTypeJson = "application/json"
 
 func startTestServer(t *testing.T) (*httptest.Server, http.Client) {
+	t.Helper()
+
 	log := logrus.New().WithField("test", t.Name())
 	memStorage := memory.NewMemoryRepo()
 	handler := server.GetMux(&server.AppContext{Log: log, Repo: memStorage})
@@ -39,6 +41,8 @@ func startTestServer(t *testing.T) (*httptest.Server, http.Client) {
 }
 
 func TestMainScenario(t *testing.T) {
+	t.Parallel()
+
 	testServer, client := startTestServer(t)
 	defer testServer.Close()
 
@@ -74,11 +78,12 @@ func TestMainScenario(t *testing.T) {
 }
 
 func TestContentTypeRequired(t *testing.T) {
+	t.Parallel()
+
 	testServer, client := startTestServer(t)
 	defer testServer.Close()
 
 	resp, err := client.Post(testServer.URL, "", strings.NewReader(json1))
 	require.NoError(t, err)
 	assert.Equal(t, http.StatusUnsupportedMediaType, resp.StatusCode)
-
 }

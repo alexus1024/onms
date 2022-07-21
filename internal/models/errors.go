@@ -1,6 +1,6 @@
 package models
 
-// InputRelatedError describes situations worth of 4xx HTTP return codes
+// InputRelatedError describes situations worth of 4xx HTTP return codes.
 type InputRelatedError struct {
 	msg             string
 	err             error
@@ -27,5 +27,6 @@ func NewInputRelatedErrorWithStatus(msg string, err error, status int) error {
 	if status < 400 || status >= 500 {
 		panic("InputRelatedError supports 4xx errors only")
 	}
+
 	return InputRelatedError{msg, err, status}
 }

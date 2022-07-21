@@ -1,7 +1,7 @@
 package memory
 
 import (
-	"fmt"
+	"errors"
 	"sync"
 
 	"github.com/alexus1024/onms/internal/models"
@@ -9,7 +9,12 @@ import (
 	"github.com/google/uuid"
 )
 
-var interfaceCheck storage.Repo = &MemoryRepo{}
+var interfaceCheck storage.Repo = &MemoryRepo{} // nolint:deadcode,unused,varcheck // this is interface compliance check
+
+var (
+	ErrModelNil = errors.New("model is nil")
+	ErrIdEmpty  = errors.New("machine id is empty")
+)
 
 type MemoryRepo struct {
 	muMap   sync.RWMutex
@@ -18,16 +23,18 @@ type MemoryRepo struct {
 
 func NewMemoryRepo() *MemoryRepo {
 	return &MemoryRepo{
+		muMap:   sync.RWMutex{},
 		storage: make(map[uuid.UUID]*models.CapturedData),
 	}
 }
 
 func (r *MemoryRepo) SaveRecord(model *models.CapturedData) error {
 	if model == nil {
-		return fmt.Errorf("model is nil")
+		return ErrModelNil
 	}
+
 	if model.MachineID.IsEmpty() {
-		return fmt.Errorf("machine id is empty")
+		return ErrIdEmpty
 	}
 
 	modelCopy := *model

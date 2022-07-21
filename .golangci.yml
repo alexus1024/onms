@@ -1,0 +1,28 @@
+linters:
+  enable-all: true
+  # Disable specific linter
+  # https://golangci-lint.run/usage/linters/#disabled-by-default-linters--e--enable
+  disable:
+  # obsoletes
+    - varnamelen
+    - golint
+    - scopelint
+    - exhaustivestruct
+    - interfacer
+    - maligned
+    - bodyclose
+    - contextcheck
+    - nilerr
+    - noctx
+    - rowserrcheck
+    - sqlclosecheck
+    - structcheck
+    - tparallel
+    - wastedassign
+    # my choice
+    - revive # I do not respect "uppercase abbreviations" naming rule here
+    - stylecheck # the same reason
+    - exhaustruct # just to save some efforts
+    - wrapcheck # just to save some efforts
+    - gochecknoglobals # just to save some efforts
+

@@ -17,14 +17,17 @@ type SampleServerConfig struct {
 
 func ReadConfig() (*SampleServerConfig, error) {
 	var s SampleServerConfig
+
 	err := envconfig.Process(envPrefix, &s)
 	if err != nil {
 		return nil, fmt.Errorf("read env: %w", err)
 	}
+
 	return &s, nil
 }
 
 func PrintHelp() error {
 	err := envconfig.Usage(envPrefix, &SampleServerConfig{})
+
 	return err
 }

@@ -47,6 +47,8 @@ const (
 )
 
 func TestUnmarshal(t *testing.T) {
+	t.Parallel()
+
 	testCases := []struct {
 		desc         string
 		json         string
@@ -59,25 +61,29 @@ func TestUnmarshal(t *testing.T) {
 			json:         json1,
 			expMachineId: 12345,
 			expCpuTemp:   90,
-			expSysTime:   time.Date(2022, 04, 23, 18, 25, 43, 511000000, time.UTC),
+			expSysTime:   time.Date(2022, 4, 23, 18, 25, 43, 511000000, time.UTC),
 		},
 		{
 			desc:         "case 2",
 			json:         json2,
 			expMachineId: 4444,
 			expCpuTemp:   78,
-			expSysTime:   time.Date(2022, 04, 21, 19, 25, 43, 219000000, time.UTC),
+			expSysTime:   time.Date(2022, 4, 21, 19, 25, 43, 219000000, time.UTC),
 		},
 		{
 			desc:         "case 3",
 			json:         json3,
 			expMachineId: 61616,
 			expCpuTemp:   78,
-			expSysTime:   time.Date(2021, 07, 28, 14, 16, 27, 0, time.UTC),
+			expSysTime:   time.Date(2021, 7, 28, 14, 16, 27, 0, time.UTC),
 		},
 	}
 	for _, tC := range testCases {
+		tC := tC // closure
+
 		t.Run(tC.desc, func(t *testing.T) {
+			t.Parallel()
+
 			model := &models.CapturedData{}
 			err := json.Unmarshal([]byte(tC.json), model)
 			require.NoError(t, err)
@@ -89,6 +95,8 @@ func TestUnmarshal(t *testing.T) {
 }
 
 func TestMarshal(t *testing.T) {
+	t.Parallel()
+
 	demoTZ, err := time.LoadLocation("Asia/Yekaterinburg") // GMT+5
 
 	require.NoError(t, err)
@@ -112,5 +120,4 @@ func TestMarshal(t *testing.T) {
 	assert.Equal(t, float64(3), gjson.GetBytes(jsonResult, "stats.fanSpeed").Num)
 	assert.Equal(t, "4", gjson.GetBytes(jsonResult, "lastLoggedIn").Str)
 	assert.Equal(t, "2022-01-02T03:04:05+05:00", gjson.GetBytes(jsonResult, "sysTime").Str) // 6 nanoseconds was cut
-
 }

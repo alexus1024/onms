@@ -1,6 +1,7 @@
 package server
 
 import (
+	"errors"
 	"net/http"
 
 	"github.com/alexus1024/onms/internal/models"
@@ -29,7 +30,6 @@ type AppContext struct {
 // GetMux returns a handler configured to process all required operations.
 // Sub-handlers require server context to be configured properly.
 func GetMux(actx *AppContext) http.Handler {
-
 	r := mux.NewRouter()
 	r.HandleFunc("/", toHandler(HandlerCapture, actx)).Methods(http.MethodPost).Name("capture")
 	r.HandleFunc("/", toHandler(HandlerGetAll, actx)).Methods(http.MethodGet).Name("read all")
@@ -39,7 +39,7 @@ func GetMux(actx *AppContext) http.Handler {
 
 // toHandler converts AppHandler to http.HandlerFunc.
 // It also processes Golang errors into HTTP errors and thereby
-// setups application-wide standard for HTTP errors
+// setups application-wide standard for HTTP errors.
 func toHandler(ah AppHandler, actx *AppContext) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		route := mux.CurrentRoute(r)
@@ -48,33 +48,36 @@ func toHandler(ah AppHandler, actx *AppContext) http.HandlerFunc {
 		// add current route into all handler's logs
 		ctxCopy := *actx
 		ctxCopy.Log = log
-
 		// call actual handler
 		err := ah(w, r, &ctxCopy)
-
 		// convert go errors into API errors
 		if err != nil {
 			route := mux.CurrentRoute(r)
 			log := actx.Log.WithField("route", route.GetName())
-			switch te := err.(type) {
-			case models.InputRelatedError:
+
+			var inputRelated models.InputRelatedError
+			if errors.As(err, &inputRelated) {
 				log.WithError(err).Info("api error (input-related)")
-				errOut := ApiError{Message: te.Error()}
-				status := te.SuggestedStatus()
+
+				errOut := ApiError{Message: inputRelated.Error()}
+
+				status := inputRelated.SuggestedStatus()
 				if status == 0 {
 					status = 400
 				}
-				errOut.WriteToResponse(log, w, status)
-				return
 
-			default:
-				log.WithError(err).Error("api error")
-				errOut := ApiError{Message: "internal error"}
-				errOut.WriteToResponse(log, w, 500)
+				errOut.WriteToResponse(log, w, status)
+
 				return
 			}
+
+			// all other error types
+			log.WithError(err).Error("api error")
+
+			errOut := ApiError{Message: "internal error"}
+			errOut.WriteToResponse(log, w, http.StatusInternalServerError)
+
+			return
 		}
-
 	}
-
 }

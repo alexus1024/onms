@@ -13,6 +13,8 @@ import (
 )
 
 func TestParallelUse(t *testing.T) {
+	t.Parallel()
+
 	log := logrus.New().WithField("test", t.Name())
 	repo := memory.NewMemoryRepo()
 
@@ -21,22 +23,26 @@ func TestParallelUse(t *testing.T) {
 	// no panics or errors and 1000 entries in storage expected in the result
 
 	wg := sync.WaitGroup{}
-	for i := 0; i < 100; i++ {
+	for goNum := 0; goNum < 100; goNum++ {
 		wg.Add(1)
+
 		go func(num int) {
 			defer wg.Done()
-			m := &models.CapturedData{MachineID: models.MachineID(num + 1)}
+
+			m := &models.CapturedData{MachineID: models.MachineID(num + 1)} // nolint:exhaustruct // no need in all fields here
 			for writeNum := 0; writeNum < 10; writeNum++ {
 				err := repo.SaveRecord(m)
 				require.NoError(t, err)
 				log.WithField("worker", num).Info("inserted")
 				time.Sleep(time.Microsecond)
 			}
-		}(i)
+		}(goNum)
 
 		wg.Add(1)
+
 		go func() {
 			defer wg.Done()
+
 			for writeNum := 0; writeNum < 10; writeNum++ {
 				d, err := repo.GetAllRecords()
 				require.NoError(t, err)
@@ -44,7 +50,6 @@ func TestParallelUse(t *testing.T) {
 				time.Sleep(time.Millisecond)
 			}
 		}()
-
 	}
 
 	wg.Wait()

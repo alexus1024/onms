@@ -15,6 +15,7 @@ func HandlerGetAll(w http.ResponseWriter, r *http.Request, actx *AppContext) err
 	w.Header().Add(ContentType, ContentTypeJson)
 
 	encoder := json.NewEncoder(w)
+
 	err = encoder.Encode(dbData)
 	if err != nil {
 		return fmt.Errorf("marshal: %w", err)

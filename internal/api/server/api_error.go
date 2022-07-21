@@ -17,9 +17,15 @@ func (e ApiError) WriteToResponse(log *logrus.Entry, w http.ResponseWriter, stat
 	errOutBytes, err := json.Marshal(e)
 	if err != nil {
 		log.WithError(err).Error("can not marshal http error (input-related)")
-		w.WriteHeader(500)
+		w.WriteHeader(http.StatusInternalServerError)
+
 		return
 	}
+
 	w.WriteHeader(statusCode)
-	w.Write(errOutBytes)
+
+	_, err = w.Write(errOutBytes)
+	if err != nil {
+		log.WithError(err).Warn("error on write result")
+	}
 }

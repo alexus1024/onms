@@ -9,3 +9,6 @@ help_env : build
 
 test:
 	@go test -cover ./...
+
+lint:
+	@golangci-lint run
