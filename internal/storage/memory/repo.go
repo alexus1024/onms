@@ -5,12 +5,21 @@ import (
 	"sync"
 
 	"github.com/alexus1024/onms/internal/models"
+	"github.com/alexus1024/onms/internal/storage"
 	"github.com/google/uuid"
 )
+
+var interfaceCheck storage.Repo = &MemoryRepo{}
 
 type MemoryRepo struct {
 	muMap   sync.RWMutex
 	storage map[uuid.UUID]*models.CapturedData
+}
+
+func NewMemoryRepo() *MemoryRepo {
+	return &MemoryRepo{
+		storage: make(map[uuid.UUID]*models.CapturedData),
+	}
 }
 
 func (r *MemoryRepo) SaveRecord(model *models.CapturedData) error {

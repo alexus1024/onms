@@ -9,6 +9,11 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
+const (
+	ContentType     = "content-type"
+	ContentTypeJson = "application/json"
+)
+
 type AppHandler func(http.ResponseWriter, *http.Request) error
 
 type ApiError struct {
@@ -45,8 +50,8 @@ func handleErrors(ah AppHandler, log *logrus.Entry) http.HandlerFunc {
 					w.WriteHeader(500)
 					return
 				}
-				w.Write(errOutBytes)
 				w.WriteHeader(400)
+				w.Write(errOutBytes)
 				return
 
 			default:
@@ -58,8 +63,8 @@ func handleErrors(ah AppHandler, log *logrus.Entry) http.HandlerFunc {
 					w.WriteHeader(500)
 					return
 				}
-				w.Write(errOutBytes)
 				w.WriteHeader(500)
+				w.Write(errOutBytes)
 				return
 			}
 		}

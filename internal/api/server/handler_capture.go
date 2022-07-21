@@ -10,6 +10,12 @@ import (
 )
 
 func HandlerCapture(w http.ResponseWriter, r *http.Request) error {
+
+	contentType := r.Header.Get(ContentType)
+	if contentType != ContentTypeJson {
+		return models.NewInputRelatedError("unsupported content type "+contentType, nil)
+	}
+
 	ctx := r.Context()
 	repo := storage.GetStorage(ctx)
 

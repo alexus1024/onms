@@ -17,6 +17,8 @@ func HandlerGetAll(w http.ResponseWriter, r *http.Request) error {
 		return fmt.Errorf("read from storage: %w", err)
 	}
 
+	w.Header().Add(ContentType, ContentTypeJson)
+
 	encoder := json.NewEncoder(w)
 	err = encoder.Encode(dbData)
 	if err != nil {
