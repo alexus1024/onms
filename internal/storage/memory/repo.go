@@ -5,11 +5,12 @@ import (
 	"sync"
 
 	"github.com/alexus1024/onms/internal/models"
+	"github.com/google/uuid"
 )
 
 type MemoryRepo struct {
 	muMap   sync.RWMutex
-	storage map[models.MachineID]*models.CapturedData
+	storage map[uuid.UUID]*models.CapturedData
 }
 
 func (r *MemoryRepo) SaveRecord(model *models.CapturedData) error {
@@ -25,19 +26,19 @@ func (r *MemoryRepo) SaveRecord(model *models.CapturedData) error {
 	r.muMap.Lock()
 	defer r.muMap.Unlock()
 
-	r.storage[model.MachineID] = &modelCopy
+	r.storage[uuid.New()] = &modelCopy
 
 	return nil
 }
 
-func (r *MemoryRepo) GetAllRecords() ([]*models.CapturedData, error) {
+func (r *MemoryRepo) GetAllRecords() ([]*models.CapturedDataStorage, error) {
 	r.muMap.RLock()
 	defer r.muMap.RUnlock()
 
-	ret := make([]*models.CapturedData, 0, len(r.storage))
+	ret := make([]*models.CapturedDataStorage, 0, len(r.storage))
 
-	for _, d := range r.storage {
-		ret = append(ret, d)
+	for id, d := range r.storage {
+		ret = append(ret, &models.CapturedDataStorage{Id: id, CapturedData: *d})
 	}
 
 	return ret, nil

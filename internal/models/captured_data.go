@@ -1,12 +1,8 @@
 package models
 
-type MachineID int
+import "github.com/google/uuid"
 
-func (id MachineID) IsEmpty() bool {
-	return id == 0
-}
-
-// TODO: split db model with ID
+// CapturedData represents a report from machine as got from API
 type CapturedData struct {
 	MachineID MachineID `json:"machineId"`
 	Stats     struct {
@@ -19,4 +15,8 @@ type CapturedData struct {
 	SysTime      RawTime `json:"sysTime"`
 }
 
-// TODO: JSON parsers for Raw types
+// CapturedDataStorage represents storage model for a report
+type CapturedDataStorage struct {
+	Id uuid.UUID `json:"id"`
+	CapturedData
+}
